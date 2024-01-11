@@ -1,0 +1,136 @@
+version: '3'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.10.5-management
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+#could not find D:\Facultate\An4\SDProjects\Tema2BunBun\UsersMS\A1\UsersMS\A1: CreateFile D:\Facultate\An4\SDProjects\Tema2BunBun\UsersMS\A1\UsersMS\A1: The system cannot find the path specified.
+  users-server:
+    build:
+      context: D:\Facultate\An4\SDProjects\Tema2BunBun\UsersMS\A1
+      dockerfile: D:\Facultate\An4\SDProjects\Tema2BunBun\UsersMS\A1\Dockerfile
+    image: person-microservice
+    ports:
+      - "8080:8080"
+    environment:
+      DEVICE_IP: devices-server
+      DB_IP: db-users
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: qwer1234
+      DB_DBNAME: users-db
+      PORT: 8080
+    depends_on:
+      - db-users
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  devices-server:
+    build:
+      context: D:\Facultate\An4\SDProjects\Tema2BunBun\DeviceMS\DevicesMS
+      dockerfile: D:\Facultate\An4\SDProjects\Tema2BunBun\DeviceMS\DevicesMS\Dockerfile
+    image: device-microservice
+    ports:
+      - "8081:8081"
+    environment:
+      DB_IP: db-devices
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: qwer1234
+      DB_DBNAME: devices-db
+      PORT: 8081
+    depends_on:
+      - db-devices
+      - rabbitmq
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  monitor-server:
+    build:
+      context: D:\Facultate\An4\SDProjects\Tema2BunBun\Assigment2\assignment2
+      dockerfile: D:\Facultate\An4\SDProjects\Tema2BunBun\Assigment2\assignment2\Dockerfile
+    image: monitoring-microservice
+    ports:
+      - "8082:8082"
+    environment:
+      DB_IP: db-monitor
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: qwer1234
+      DB_DBNAME: simulations-db
+      PORT: 8082
+    depends_on:
+      - db-monitor
+      - rabbitmq
+
+  chat-server:
+    build:
+      context: D:\Facultate\An4\SDProjects\Tema2BunBun\chatAppBackend
+      dockerfile: D:\Facultate\An4\SDProjects\Tema2BunBun\chatAppBackend\Dockerfile
+    image: chat-microservice
+    ports:
+      - "8084:8084"
+
+  
+
+  #nu a mers ./Frontend -- dubleaza fisierul
+  #could not find D:\Facultate\An4\SDProjects\Tema2BunBun\Frontend\Frontend: CreateFile D:\Facultate\An4\SDProjects\Tema2BunBun\Frontend\Frontend: The system cannot find the file specified.
+  frontend:
+    build:
+      context: D:\Facultate\An4\SDProjects\Tema2BunBun\Frontend
+      dockerfile: D:\Facultate\An4\SDProjects\Tema2BunBun\Frontend\Dockerfile
+    ports:
+     - "3000:3000"
+
+  db-users:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+      POSTGRES_IP: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: qwer1234
+      POSTGRES_DB: users-db
+    volumes:
+      - db-data-user-microservice:/var/lib/postgresql/data
+    ports:
+      - "5436:5432"
+
+  db-devices:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+      POSTGRES_IP: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: qwer1234
+      POSTGRES_DB: devices-db
+    volumes:
+      - db-data-device-microservice:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+  db-monitor:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+      POSTGRES_IP: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: qwer1234
+      POSTGRES_DB: simulations-db
+    volumes:
+      - db-data-monitor-microservice:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+
+volumes:
+  db-data-user-microservice:
+  db-data-device-microservice:
+  db-data-monitor-microservice:
+
